@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+logging.basicConfig(level=logging.DEBUG)
 
 __author__ = "Vadym Stupakov"
 __maintainer__ = "Vadym Stupakov"
@@ -18,8 +19,8 @@ from OpenSSL import crypto, SSL
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import TLS_FTPHandler, FTPHandler
 from pyftpdlib.servers import FTPServer as FTPServer
-
-logging.basicConfig(level=logging.INFO)
+import pyftpdlib.log as pyftpdliblog
+pyftpdliblog.LEVEL = logging.DEBUG
 
 
 def generate_password(strength):
@@ -99,7 +100,7 @@ def main():
     parser.add_argument("-g", "--use_public", action="store_true")
     parser.add_argument("--ip", type=str, default=get_local_ip())
     parser.add_argument("--port", type=int, default=60000)
-    parser.add_argument("--port_range", default=range(60001, 60101))
+    parser.add_argument("--port_range", default="60001-60101", help="Specify a port range for data transmission in FTP Passive Mode, e.g. 60001-60101")
 
     args = parser.parse_args()
 
@@ -133,7 +134,8 @@ def main():
     else:
         handler = FTPHandler
 
-    handler.passive_ports = args.port_range
+    ranges = args.port_range.split('-')
+    handler.passive_ports = range(int(ranges[0]),int(ranges[1]))
     handler.authorizer = authorizer
 
     if "Linux" in platform.system():
